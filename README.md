@@ -31,8 +31,8 @@ Basta **clonar este repositório e abrir o Claude Code nele**. O agente lê o
 [AGENTS.md](AGENTS.md) e faz a instalação por você:
 
 ```bash
-git clone https://dev.azure.com/NorberEngenharia/Frequencia/_git/sdd-padrao
-cd sdd-padrao
+git clone https://github.com/Raikyr4/SpecDriven.git
+cd SpecDriven
 claude
 ```
 
@@ -46,8 +46,8 @@ Depois da instalação, a sessão em andamento só vê os comandos após `/reloa
 sessão nova. Confira que `/especificar` e `/situacao` aparecem ao digitar `/`. O plugin fica
 instalado para o usuário, então vale para todos os projetos da máquina.
 
-- **Repositório privado:** o `git clone` usa as credenciais do git da máquina. No Windows, o Git
-  Credential Manager que vem com o Git for Windows faz o login no Azure DevOps na primeira vez.
+- **Repositório público** ([github.com/Raikyr4/SpecDriven](https://github.com/Raikyr4/SpecDriven)):
+  clonar e instalar o plugin não pedem login.
 - **Se a sessão não leu o `AGENTS.md`:** peça "leia o AGENTS.md". O `/memory` não está
   disponível no app desktop do Claude, na aba Code; no terminal ele lista os arquivos
   carregados.
@@ -59,7 +59,7 @@ Só se não quiser usar o `AGENTS.md`. Instale **pelo CLI**, não pelo comando `
 desktop do Claude, `/plugin` abre uma tela de gerenciamento e descarta os argumentos.
 
 ```bash
-claude plugin marketplace add https://dev.azure.com/NorberEngenharia/Frequencia/_git/sdd-padrao
+claude plugin marketplace add https://github.com/Raikyr4/SpecDriven.git
 claude plugin install sdd@sdd-padrao
 claude plugin list
 ```

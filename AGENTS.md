@@ -44,15 +44,13 @@ Se o passo 5 não mostrar o plugin, instale **pelo CLI**, não pelo comando `/pl
 desktop do Claude, `/plugin` abre uma tela de gerenciamento e descarta os argumentos.
 
 ```bash
-claude plugin marketplace add https://dev.azure.com/NorberEngenharia/Frequencia/_git/sdd-padrao
+claude plugin marketplace add https://github.com/Raikyr4/SpecDriven.git
 claude plugin install sdd@sdd-padrao
 claude plugin list
 ```
 
-- O repositório é privado: antes, confirme que
-  `git clone https://dev.azure.com/NorberEngenharia/Frequencia/_git/sdd-padrao` funciona. O Git
-  Credential Manager faz o login no Azure DevOps na primeira vez.
-- Para testar o plugin a partir desta pasta local, sem o Azure DevOps, use
+- O repositório é público (`https://github.com/Raikyr4/SpecDriven.git`): não precisa de login.
+- Para testar o plugin a partir desta pasta local, sem baixar do GitHub, use
   `claude plugin marketplace add <caminho-desta-pasta>`.
 - Para atualizar: `claude plugin marketplace update sdd-padrao`.
 - Depois de instalar, a sessão em andamento só vê os comandos após `/reload-plugins` ou uma nova
@@ -77,15 +75,10 @@ claude plugin list
   teste novo ou ajustado em `tests/`, com `python -m unittest discover -s tests -v` passando.
 - **Aprovação é humana:** nunca escreva `status: aprovado` em artefatos de projeto e nunca use
   `--no-verify`.
-- **Abrir o PR (Azure DevOps):** só quando o usuário pedir, depois do commit e do push da branch
-  `feat/vX.Y.Z-...`. Não use `az`, `gh` nem PAT: todos já têm o Git Credential Manager logado.
-  Peça a credencial a ele com `git credential fill` (`protocol=https`, `host=dev.azure.com`) e
-  chame a API REST com `Authorization: Bearer <password>`, sem imprimir nem gravar o token:
-
-  ```text
-  POST https://dev.azure.com/NorberEngenharia/Frequencia/_apis/git/repositories/sdd-padrao/pullrequests?api-version=7.1
-  corpo: sourceRefName (refs/heads/<branch>), targetRefName (refs/heads/main), title, description
-  ```
+- **Abrir o PR (GitHub, `Raikyr4/SpecDriven`):** só quando o usuário pedir, depois do commit e do
+  push da branch `feat/vX.Y.Z-...`, para a `main`. Com o `gh` logado, use `gh pr create`; sem ele,
+  entregue ao usuário o link `https://github.com/Raikyr4/SpecDriven/compare/main...<branch>` com o
+  título e a descrição prontos. Nunca peça, imprima nem grave token.
 
   Título no formato `vX.Y.Z: resumo`. A descrição traz o impacto nos projetos que já usam.
 
