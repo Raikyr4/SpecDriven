@@ -1,4 +1,4 @@
-# sdd-padrao
+# SpecDriven
 
 Padrão de **Spec-Driven Development (SDD)** da empresa para o Claude Code. Os agentes de IA
 escrevem a especificação, o plano, as tarefas e o código; uma pessoa aprova cada fase antes da
@@ -75,6 +75,7 @@ Claude Code.
 | Comando | Fase | O que faz |
 | --- | --- | --- |
 | `/prepararsdd <dir>` | Preparação | Cria ou melhora a estrutura SDD no diretório (projeto novo ou existente) |
+| `/descobrir [modo] <ideia>` | Descoberta (opcional) | Ideia vaga → brief em `docs/descoberta/`; modos `brainstorm`, `prfaq` e `prd` (fatia a iniciativa em features) |
 | `/constituicao` | Preparação | Cria a constituição ou propõe emenda datada |
 | `/especificar <necessidade>` | Spec | Escreve a spec (o QUE e por quê) com critérios EARS; a necessidade vem em texto, anexo, arquivo `.md`/`.docx`/`.pdf` ou pasta |
 | `/esclarecer <NNN>` | Spec | Até 5 perguntas sobre lacunas, gravadas na spec |
@@ -212,6 +213,19 @@ numa branch atrasada; `/verificar` dá FAIL com a branch atrasada; e o hook nega
 `az repos pr create` nessa situação. Para checar à mão: `python .sdd/sdd_gate.py sincronia`
 (0 em dia, 1 na principal ou atrasada, 2 sem `git fetch`). A branch principal vem de
 `"branch_principal"` em `.claude/sdd.json` (padrão `main`).
+
+### Descoberta (antes da spec)
+
+Quando a ideia ainda é vaga (veio como solução, sem para quem, sem métrica) ou é grande demais
+para uma spec, `/descobrir` conduz até 3 rodadas de perguntas e grava
+`docs/descoberta/<slug>/brief.md`: problema, quem tem, por que agora, sucesso com número, escopo,
+fora de escopo, riscos e perguntas abertas. Modos: `brainstorm` compara caminhos, `prfaq` testa
+a ideia com um comunicado de lançamento e perguntas difíceis, e `prd` lista requisitos de
+produto e features candidatas (F-n). O brief vira a entrada do `/especificar` (`/especificar
+docs/descoberta/<slug>/brief.md F-2` especifica só a F-2). O brief não passa pelo gate, mas
+o agente não pode marcá-lo como `aprovado`, e o `validar` confere a estrutura. Na classe grande,
+o `/planejar` mostra 2 ou 3 alternativas para cada decisão estrutural antes de escrever
+(`/planejar <NNN> alternativas` força isso em qualquer classe).
 
 ### Cerimônia proporcional
 

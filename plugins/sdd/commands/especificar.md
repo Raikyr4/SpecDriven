@@ -1,6 +1,6 @@
 ---
 description: "Passo 1: comece uma funcionalidade nova. Descreva a necessidade (texto, arquivo ou pasta) e aprove a spec."
-argument-hint: "<necessidade: texto, arquivo .md/.docx/.pdf ou pasta>"
+argument-hint: "<necessidade: texto, arquivo .md/.docx/.pdf, pasta ou brief da descoberta> [F-n]"
 allowed-tools: Read, Glob, Grep, Write, AskUserQuestion, Bash(sh ${CLAUDE_PLUGIN_ROOT}/scripts/py.sh *), Bash(git fetch:*), Bash(git status:*), Bash(git switch -c:*), Bash(git worktree add:*), Bash(git show:*)
 ---
 
@@ -36,7 +36,13 @@ contradição vira pergunta ou questão em aberto, nunca escolha sua. Se as font
 solução pronta (tela, tabela, tecnologia), guarde o porquê dela na spec e deixe o como para o
 plano. Na seção de contexto da spec, liste as fontes usadas (caminho ou "texto do prompt").
 Se a necessidade cobrir mais de uma feature independente, proponha a divisão ao humano antes de
-escrever.
+escrever. Se ela for vaga (veio como solução, sem para quem, sem métrica), sugira `/descobrir`
+antes.
+
+**Brief da descoberta** (`docs/descoberta/<slug>/brief.md`): use problema, quem tem, sucesso,
+escopo e perguntas abertas como necessidade; as métricas M-n viram RNF ou contexto. Com
+`F-<n>` nos argumentos (brief em modo `prd`), especifique **só** essa feature, com os RP que ela
+cobre; sem `F-<n>` num PRD, pergunte qual. Cite nas fontes o brief e a F-n.
 
 ## Antes de escrever
 

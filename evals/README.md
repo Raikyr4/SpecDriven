@@ -7,6 +7,7 @@ testes, git).
 
 | Caso | Comando | O que precisa acontecer |
 | --- | --- | --- |
+| `descobrir` | `/sdd:descobrir <ideia vaga>` | brief em `docs/descoberta/`, `validar` sem erro, rascunho, código intocado, nenhum commit |
 | `especificar` | `/sdd:especificar <necessidade>` | spec criada em rascunho, `validar` sem erro, branch `feat/NNN-...`, nenhum commit |
 | `corrigir` | `/sdd:corrigir <bug>` | `-bug.md` com tarefas, `validar` sem erro, código intocado, nenhum commit |
 | `implementar` | `/sdd:implementar 001` (plano compacto aprovado em `extras/001`) | T-1 marcada, testes `F001_CA_1`/`F001_CA_2`, suíte verde, cobertura ok, nenhum commit |

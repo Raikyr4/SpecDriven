@@ -353,6 +353,12 @@ def avaliar_escrita(proj, ferramenta, entrada):
             raise Decisao("ask", "SDD: a constituicao aprovada so muda por emenda datada. Confirme, e registre a emenda na secao 'Emendas'.")
         return
 
+    # Brief da descoberta: nao libera nada, mas a aprovacao continua humana.
+    if rel.startswith("docs/descoberta/") and rel.endswith(".md"):
+        if RE_APROVADO.search(novo) and status_de(proj.em_head(rel)) != "aprovado":
+            raise Decisao("deny", "SDD: 'status: aprovado' e escrito so por uma pessoa. Deixe 'status: rascunho' e peca revisao humana.")
+        return
+
     art = proj.artefato(rel)
     if art:
         num, slug, tipo = art
@@ -1324,6 +1330,66 @@ def validar_tarefas(texto, problemas, cas_esperados, bug=False):
             problemas.append(("AVISO", "{} nao aparece em nenhuma tarefa".format(ca)))
 
 
+RE_ITEM_BRIEF = re.compile(r"^\s*[-*]\s*\*\*((M|O|RP|F|RI|PA)-\d+)\*\*(.*)$", re.M)
+MODOS_BRIEF = {
+    "brief": [],
+    "brainstorm": ["Opções"],
+    "prfaq": ["Comunicado", "FAQ"],
+    "prd": ["Requisitos de produto", "Features candidatas"],
+}
+SECOES_BRIEF = ["Problema", "Quem tem o problema", "Por que agora", "Sucesso", "Escopo",
+                "Fora de escopo", "Perguntas abertas"]
+
+
+def validar_brief(texto, problemas):
+    """Forma do brief de docs/descoberta/<slug>/brief.md."""
+    m = re.search(r"^modo:\s*(\S+)\s*$", texto[:2000], re.M)
+    modo = m.group(1) if m else None
+    if modo not in MODOS_BRIEF:
+        problemas.append(("ERRO", "frontmatter com modo invalido: use brief, brainstorm, prfaq ou prd"))
+        modo = "brief"
+    for titulo in SECOES_BRIEF + MODOS_BRIEF[modo]:
+        corpo = secao(texto, titulo)
+        if corpo is None:
+            problemas.append(("ERRO", "secao '## {}' ausente".format(titulo)))
+        elif not re.sub(r"<!--.*?-->", "", corpo, flags=re.S).strip():
+            problemas.append(("AVISO", "secao '## {}' vazia".format(titulo)))
+    for outro, secoes in MODOS_BRIEF.items():
+        if outro != modo:
+            for titulo in secoes:
+                if secao(texto, titulo) is not None:
+                    problemas.append(("AVISO", "secao '## {}' e do modo {}; remova".format(titulo, outro)))
+    itens_b = {}
+    for i in RE_ITEM_BRIEF.finditer(texto):
+        itens_b.setdefault(i.group(2), []).append((i.group(1), i.group(3)))
+    metricas = itens_b.get("M", [])
+    if not metricas:
+        problemas.append(("ERRO", "sucesso sem metrica (- **M-n** — ...)"))
+    for mid, resto in metricas:
+        if not re.search(r"\d", re.sub(r"<[^>]*>", "", resto)):
+            problemas.append(("AVISO", "{} sem numero; sem numero, vira pergunta aberta".format(mid)))
+    if modo == "brainstorm" and len(itens_b.get("O", [])) < 2:
+        problemas.append(("ERRO", "modo brainstorm precisa de ao menos duas opcoes (- **O-n**)"))
+    if modo == "prd":
+        rps = {i for i, _ in itens_b.get("RP", [])}
+        if not rps:
+            problemas.append(("ERRO", "modo prd sem requisitos de produto (- **RP-n**)"))
+        features = itens_b.get("F", [])
+        if not features:
+            problemas.append(("ERRO", "modo prd sem features candidatas (- **F-n**)"))
+        for fid, resto in features:
+            for rp in sorted(set(re.findall(r"\bRP-\d+\b", resto)) - rps):
+                problemas.append(("ERRO", "{} cita {} que nao existe".format(fid, rp)))
+            if "classe" not in resto.lower():
+                problemas.append(("AVISO", "{} sem classe sugerida".format(fid)))
+    for titulo in ("Problema", "Escopo"):
+        for tm in RE_TECNICO.finditer(secao(texto, titulo) or ""):
+            problemas.append(("AVISO", "possivel solucao tecnica em '{}': {}".format(titulo, tm.group(0))))
+    vazios = len(re.findall(r"<[a-zçãéêó][^<>\n]{2,}>", texto))
+    if vazios:
+        problemas.append(("AVISO", "{} placeholder(s) <...> nao preenchido(s)".format(vazios)))
+
+
 def validar_arquivo(proj, rel):
     texto = lf(proj.no_disco(rel))
     if texto is None:
@@ -1333,6 +1399,8 @@ def validar_arquivo(proj, rel):
         problemas.append(("ERRO", "frontmatter sem 'status: rascunho' ou 'status: aprovado'"))
     art = proj.artefato(rel)
     if not art:
+        if re.search(r"^fase:\s*descoberta\s*$", texto[:2000], re.M):
+            validar_brief(texto, problemas)
         return problemas
     num, _, tipo = art
     arqs = arquivos_da_feature(proj, num)

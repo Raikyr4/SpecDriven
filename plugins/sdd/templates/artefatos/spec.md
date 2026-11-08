@@ -35,6 +35,9 @@ Cada critério é verificável e cita pelo menos um RF.
 - **CA-2** (RF-1) — Se <condição indesejada>, então o sistema deve <resposta>.
 - **CA-3** (RF-1) — Enquanto <estado>, o sistema deve <comportamento>.
 
+**Experiência e fluxos** (opcional): <fluxo principal em passos, estados de tela — vazio,
+carregando, erro — e link para mockups. Sem nomes de componente.>
+
 ## 6. Fora de escopo
 
 - <O que esta feature deliberadamente não faz.>

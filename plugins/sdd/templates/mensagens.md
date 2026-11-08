@@ -21,6 +21,7 @@ abre o PR continua sendo o humano.
 | Momento | Primeira linha |
 | --- | --- |
 | Adoção do padrão (`/prepararsdd`) | `sdd: adota o padrão SDD no projeto` |
+| Brief da descoberta (`/descobrir`) | `descoberta: <nome da ideia>` |
 | Constituição aprovada | `constituicao: aprova a constituição do projeto` |
 | Emenda da constituição | `constituicao: emenda <AAAA-MM-DD> - <resumo>` |
 | Spec aprovada | `spec <NNN>: <título da feature>` |

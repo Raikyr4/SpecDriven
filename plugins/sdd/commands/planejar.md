@@ -1,6 +1,6 @@
 ---
 description: "Passo 2: com a spec aprovada e commitada, gera o plano técnico (como fazer) para você aprovar."
-argument-hint: "<número da feature, ex.: 004>"
+argument-hint: "<número da feature, ex.: 004> [alternativas]"
 allowed-tools: Read, Glob, Grep, Write, AskUserQuestion, Bash(sh ${CLAUDE_PLUGIN_ROOT}/scripts/py.sh *)
 ---
 
@@ -33,6 +33,11 @@ Regras:
   `${CLAUDE_PLUGIN_ROOT}/templates/artefatos/adr.md`), com `**Situação:** proposta`, citada no
   plano. Nunca escreva `aceita`: quem aceita a ADR é o humano, ao aprovar o plano.
 - Riscos e pontos que precisam de decisão humana listados; se algo estiver ambíguo, pergunte.
+- **Alternativas antes de decidir** (classe `grande`, ou argumento `alternativas`): antes de
+  escrever, para cada decisão estrutural (paradigma, fronteira, onde mora o dado, biblioteca
+  central) mostre 2 ou 3 alternativas com o que ganha, o que perde, custo e risco, e pergunte
+  com `AskUserQuestion` (recomendada primeiro). A escolha vira D-n e ADR proposta, com as
+  alternativas rejeitadas e o porquê.
 - **Tamanho:** mire 900 a 1600 tokens (cerca de 3,5 a 6,5 KB). Corte o que não muda a
   implementação; detalhe que só um arquivo precisa fica no código ou no `instructions/`.
 - **Spec de classe `media`** (veja `**Classe:**` na spec): acrescente ao plano a seção

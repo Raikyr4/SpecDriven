@@ -35,7 +35,7 @@ class MensagensSugeridas(unittest.TestCase):
     def test_comandos_que_terminam_em_commit_citam_a_convencao(self):
         raiz = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "plugins", "sdd")
         self.assertTrue(os.path.isfile(os.path.join(raiz, "templates", "mensagens.md")))
-        for nome in ("prepararsdd", "constituicao", "especificar", "esclarecer", "corrigir",
+        for nome in ("prepararsdd", "descobrir", "constituicao", "especificar", "esclarecer", "corrigir",
                      "planejar", "tarefas", "implementar", "verificar"):
             with open(os.path.join(raiz, "commands", nome + ".md"), encoding="utf-8") as f:
                 self.assertIn("templates/mensagens.md", f.read(), nome)

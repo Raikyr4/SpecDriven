@@ -913,6 +913,118 @@ class VivasExternas(unittest.TestCase):
             r.fechar()
 
 
+BRIEF = """\
+---
+fase: descoberta
+modo: {modo}
+status: rascunho
+---
+
+# Brief — Portal do cliente
+
+## Problema
+
+Clientes ligam para saber o status do pedido.
+
+## Quem tem o problema
+
+Clientes com pedidos em andamento e o atendimento.
+
+## Por que agora
+
+O volume de ligacoes dobrou no ultimo trimestre.
+
+## Sucesso
+
+- **M-1** — reduzir de 400 para 150 ligacoes por semana ate 2027-03
+
+## Escopo
+
+- Consultar status do pedido.
+
+## Fora de escopo
+
+- Alterar pedidos.
+
+## Perguntas abertas
+
+- **PA-1** — Pedidos antigos entram?
+{extra}"""
+
+PRD_EXTRA = """
+## Requisitos de produto
+
+- **RP-1** — O cliente consulta o status sem ligar.
+
+## Features candidatas
+
+- **F-1** — Consulta de status · cobre RP-1 · classe sugerida: media · depende de: nada
+- **F-2** — Avisos por e-mail · cobre RP-9 · depende de: F-1
+"""
+
+
+class Descoberta(unittest.TestCase):
+    def setUp(self):
+        self.r = Repo()
+
+    def tearDown(self):
+        self.r.fechar()
+
+    def validar(self, texto):
+        self.r.escrever("docs/descoberta/portal/brief.md", texto)
+        return rodar(self.r, "validar", "docs/descoberta/portal/brief.md")
+
+    def test_brief_completo_passa(self):
+        p = self.validar(BRIEF.format(modo="brief", extra=""))
+        self.assertEqual(p.returncode, 0, p.stdout)
+        self.assertIn("ok", p.stdout)
+
+    def test_secao_e_metrica_faltando(self):
+        texto = BRIEF.format(modo="brief", extra="").replace("## Por que agora", "## Outra coisa")
+        texto = texto.replace("- **M-1** — reduzir de 400 para 150 ligacoes por semana ate 2027-03", "Melhorar.")
+        p = self.validar(texto)
+        self.assertEqual(p.returncode, 1)
+        self.assertIn("secao '## Por que agora' ausente", p.stdout)
+        self.assertIn("sucesso sem metrica", p.stdout)
+
+    def test_metrica_sem_numero_e_aviso(self):
+        p = self.validar(BRIEF.format(modo="brief", extra="").replace(
+            "reduzir de 400 para 150 ligacoes por semana ate 2027-03", "reduzir ligacoes"))
+        self.assertEqual(p.returncode, 0)
+        self.assertIn("M-1 sem numero", p.stdout)
+
+    def test_prd_valida_features(self):
+        p = self.validar(BRIEF.format(modo="prd", extra=PRD_EXTRA))
+        self.assertEqual(p.returncode, 1)
+        self.assertIn("F-2 cita RP-9 que nao existe", p.stdout)
+        self.assertIn("F-2 sem classe sugerida", p.stdout)
+
+    def test_brainstorm_precisa_de_duas_opcoes(self):
+        extra = "\n## Opções\n\n- **O-1** — Portal web.\n"
+        p = self.validar(BRIEF.format(modo="brainstorm", extra=extra))
+        self.assertEqual(p.returncode, 1)
+        self.assertIn("ao menos duas opcoes", p.stdout)
+
+    def test_secao_de_outro_modo_e_aviso(self):
+        p = self.validar(BRIEF.format(modo="brief", extra=PRD_EXTRA.replace("RP-9", "RP-1")))
+        self.assertIn("e do modo prd; remova", p.stdout)
+
+    def test_template_do_plugin_tem_a_forma_esperada(self):
+        with open(os.path.join(AQUI, "..", "plugins", "sdd", "templates", "artefatos", "brief.md"), encoding="utf-8") as f:
+            modelo = f.read().replace("<brief | brainstorm | prfaq | prd>", "brief")
+        p = self.validar(modelo)
+        self.assertNotIn("ausente", p.stdout)
+        self.assertIn("placeholder", p.stdout)
+
+    def test_agente_nao_aprova_o_brief(self):
+        decisao, _ = self.r.hook("Write", file_path="docs/descoberta/portal/brief.md",
+                                 content=BRIEF.format(modo="brief", extra="").replace("rascunho", "aprovado"))
+        self.assertEqual(decisao, "deny")
+        decisao, _ = self.r.hook("Write", file_path="docs/descoberta/portal/brief.md",
+                                 content=BRIEF.format(modo="brief", extra=""))
+        self.assertEqual(decisao, "allow")
+
+
 class PlanoCompacto(unittest.TestCase):
     """Caminho medio: o plano aprovado traz as tarefas e libera codigo sem -tasks.md."""
 
