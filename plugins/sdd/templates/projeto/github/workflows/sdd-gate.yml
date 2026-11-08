@@ -1,0 +1,22 @@
+name: sdd-gate
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  sdd-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Gate de fases do padrão SDD
+        # --head: o checkout de pull_request é o commit de merge; o gate precisa do último
+        # commit da branch do PR para saber se ela já contém a branch base atualizada.
+        run: python .sdd/sdd_gate.py ci --base "origin/${{ github.base_ref }}" --head "${{ github.event.pull_request.head.sha }}"

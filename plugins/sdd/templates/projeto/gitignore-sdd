@@ -1,0 +1,14 @@
+# --- padrão SDD: segredos e binários que nunca entram no repositório ---
+.env
+.env.*
+!.env.example
+*.pfx
+*.pem
+*.key
+appsettings.*.local.json
+*.onnx
+*.tflite
+*.bin
+.claude/settings.local.json
+# Métricas de tokens por fase (/medir); versione se o time quiser comparar features
+specs/.metricas/

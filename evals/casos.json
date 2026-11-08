@@ -1,0 +1,44 @@
+{
+  "instrucao_sem_humano": "Avaliação automática: não há humano. Quando o comando mandar perguntar, escolha a opção recomendada (branch nesta pasta, não worktree) e registre a suposição na resposta. Não commite.",
+  "casos": [
+    {
+      "id": "especificar",
+      "prompt": "/sdd:especificar O cliente precisa ver o total da compra com 10% de desconto quando passar de R$ 100,00, para decidir se fecha a compra.",
+      "limite_tokens": 400000,
+      "verificacoes": [
+        {"tipo": "arquivo_existe", "glob": "specs/0*-*-spec.md"},
+        {"tipo": "validar_ok", "alvo": "specs/0*-*-spec.md"},
+        {"tipo": "nao_contem", "glob": "specs/0*-*-spec.md", "texto": "status: aprovado"},
+        {"tipo": "branch_casa", "regex": "^feat/\\d{3}-"},
+        {"tipo": "sem_commits_novos"}
+      ]
+    },
+    {
+      "id": "corrigir",
+      "prompt": "/sdd:corrigir desconto(0, 10) devolve -1; para preço zero o desconto deveria devolver 0.",
+      "limite_tokens": 300000,
+      "verificacoes": [
+        {"tipo": "arquivo_existe", "glob": "specs/0*-*-bug.md"},
+        {"tipo": "validar_ok", "alvo": "specs/0*-*-bug.md"},
+        {"tipo": "contem", "glob": "specs/0*-*-bug.md", "texto": "T-1"},
+        {"tipo": "sem_codigo_alterado"},
+        {"tipo": "sem_commits_novos"}
+      ]
+    },
+    {
+      "id": "implementar",
+      "extras": "extras/001",
+      "branch": "feat/001-desconto-progressivo",
+      "prompt": "/sdd:implementar 001",
+      "limite_tokens": 500000,
+      "verificacoes": [
+        {"tipo": "contem", "glob": "specs/001-desconto-progressivo-plan.md", "texto": "- [x] T-1"},
+        {"tipo": "contem", "glob": "app/test_*.py", "texto": "F001_CA_1"},
+        {"tipo": "contem", "glob": "app/test_*.py", "texto": "F001_CA_2"},
+        {"tipo": "comando_ok", "comando": ["python", "-m", "unittest", "discover", "-s", "app", "-p", "test_*.py"]},
+        {"tipo": "cobertura_ok", "feature": "001"},
+        {"tipo": "sem_commits_novos"}
+      ]
+    }
+  ]
+}

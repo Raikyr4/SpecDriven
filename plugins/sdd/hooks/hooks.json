@@ -1,0 +1,17 @@
+{
+  "description": "Gate de fases do padrao SDD: ordem das fases, aprovacao humana e verificacoes que nao podem ser desligadas. O comando chama scripts/py.sh, que escolhe o Python 3.8+ disponivel; o .gitattributes mantem LF nos .sh mesmo em clones no Windows.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/py.sh\" hooks/sdd_gate.py hook; rc=$?; if [ $rc -eq 127 ]; then echo '{\"systemMessage\":\"SDD: Python 3.8+ nao encontrado. O gate de fases esta desligado nesta maquina; o check do pull request continua valendo.\"}'; exit 0; fi; exit $rc",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}

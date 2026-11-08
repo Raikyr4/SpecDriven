@@ -1,0 +1,28 @@
+# Testes do próprio padrão SDD (gate de fases).
+trigger:
+  branches:
+    include: [main]
+pr:
+  branches:
+    include: [main]
+
+strategy:
+  matrix:
+    linux:
+      vmImage: ubuntu-latest
+    windows:
+      vmImage: windows-latest
+
+pool:
+  vmImage: $(vmImage)
+
+steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: "3.12"
+  - script: python -m pip install -r requirements-dev.txt
+    displayName: PyYAML (teste dos cabeçalhos dos comandos)
+  - script: git config --global user.email ci@example.com && git config --global user.name ci
+    displayName: Identidade git para os testes
+  - script: python -m unittest discover -s tests -v
+    displayName: Testes do gate

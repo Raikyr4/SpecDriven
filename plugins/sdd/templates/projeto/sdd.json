@@ -1,0 +1,19 @@
+{
+  "versao": 1,
+  "modo": "bloqueio",
+  "specs": "specs",
+  "agente_pode_commitar": false,
+  "exigir_base_atualizada": true,
+  "branch_principal": "main",
+  "areas_sensiveis": ["<caminho/de/autenticacao/>", "<**/Payments/**>"],
+  "limite_revisao": 50,
+  "modulos": [
+    {
+      "nome": "<nome>",
+      "caminho": "<caminho/relativo>",
+      "extensoes": [".cs"],
+      "instructions": "instructions/<nome>.md",
+      "verificacao": ["<comando de build>", "<comando de teste>"]
+    }
+  ]
+}

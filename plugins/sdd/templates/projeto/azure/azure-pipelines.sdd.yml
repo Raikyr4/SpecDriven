@@ -1,0 +1,20 @@
+# Gate do padrão SDD para Azure Repos.
+# No Azure Repos o gatilho de PR vem da política da branch, não deste arquivo:
+# Project settings > Repositories > <repo> > Policies > Branch policies (main) >
+# Build validation > + > selecione o pipeline criado a partir deste arquivo, "Required".
+trigger: none
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+  - checkout: self
+    fetchDepth: 0
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: "3.12"
+  # --head: o Azure faz checkout do commit de merge; o gate precisa do último commit da
+  # branch do PR para saber se ela já contém a branch de destino atualizada.
+  - script: python .sdd/sdd_gate.py ci --base "$(System.PullRequest.TargetBranch)" --head "$(System.PullRequest.SourceCommitId)"
+    displayName: Gate de fases do padrão SDD
+    condition: eq(variables['Build.Reason'], 'PullRequest')

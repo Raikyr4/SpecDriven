@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+.env
+.claude/settings.local.json
+*.zip
+
+# Ferramentas instaladas localmente para avaliação (BMAD, OpenSpec); não fazem parte do padrão
+_bmad/
+_bmad-output/
+openspec/
+.claude/skills/bmad-*/
+.claude/skills/openspec-*/
+.claude/commands/opsx/
+
+# Resultados dos evals (gastam tokens; guarde fora do repo se quiser comparar)
+evals/resultados/

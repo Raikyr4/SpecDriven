@@ -1,0 +1,10 @@
+{
+  "extraKnownMarketplaces": {
+    "__MARKETPLACE__": {
+      "source": { "source": "git", "url": "__URL_DO_REPOSITORIO__" }
+    }
+  },
+  "enabledPlugins": {
+    "sdd@__MARKETPLACE__": true
+  }
+}

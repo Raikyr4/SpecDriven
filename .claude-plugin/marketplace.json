@@ -1,0 +1,12 @@
+{
+  "name": "sdd-padrao",
+  "description": "Padrão de Spec-Driven Development da empresa para o Claude Code.",
+  "owner": { "name": "Renner" },
+  "plugins": [
+    {
+      "name": "sdd",
+      "source": "./plugins/sdd",
+      "description": "Comandos, agentes revisores, templates e gate de fases do padrão SDD."
+    }
+  ]
+}
