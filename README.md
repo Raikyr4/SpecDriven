@@ -51,7 +51,11 @@ instalado para o usuário, então vale para todos os projetos da máquina.
 - **Se a sessão não leu o `AGENTS.md`:** peça "leia o AGENTS.md". O `/memory` não está
   disponível no app desktop do Claude, na aba Code; no terminal ele lista os arquivos
   carregados.
-- **Atualizar:** `claude plugin marketplace update sdd-padrao`.
+- **Atualizar:** `claude plugin marketplace update specdriven`.
+- **Instalou antes da v0.1.22?** O marketplace se chamava `sdd-padrao`. Troque uma vez:
+  `claude plugin marketplace remove sdd-padrao`, depois o `marketplace add` e o
+  `install sdd@specdriven` abaixo. Em projetos já preparados, troque `sdd-padrao` por
+  `specdriven` no `.claude/settings.json` (`extraKnownMarketplaces` e `enabledPlugins`).
 
 ### Instalação manual (alternativa)
 
@@ -60,11 +64,11 @@ desktop do Claude, `/plugin` abre uma tela de gerenciamento e descarta os argume
 
 ```bash
 claude plugin marketplace add https://github.com/Raikyr4/SpecDriven.git
-claude plugin install sdd@sdd-padrao
+claude plugin install sdd@specdriven
 claude plugin list
 ```
 
-`sdd@sdd-padrao` deve aparecer com `Status: enabled`.
+`sdd@specdriven` deve aparecer com `Status: enabled`.
 
 Projetos que já passaram pelo `/prepararsdd` trazem em `.claude/settings.json` a referência a
 este marketplace, então quem clonar o projeto recebe a oferta de instalar o plugin ao abrir o
@@ -260,7 +264,7 @@ plano com tarefas) depende de atualizar a cópia `.sdd/sdd_gate.py` a partir de
 ### Revisão proporcional e cobertura
 
 `sdd_gate.py revisao` (no `/implementar`) e `revisao --base principal` (no `/verificar`) gravam o
-diff num arquivo temporário e dizem se o `revisor-de-codigo` (diff acima de `limite_revisao`
+diff em `.git/sdd/` (fora do versionamento) e dizem se o `revisor-de-codigo` (diff acima de `limite_revisao`
 linhas ou arquivo de código novo) e o `revisor-de-seguranca` (caminho em `areas_sensiveis` do
 `sdd.json` ou termo sensível nas linhas adicionadas) são necessários. Os revisores recebem o
 caminho do diff, não o texto. No `/verificar`, a revisão completa opcional roda três revisores

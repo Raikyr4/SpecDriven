@@ -38,7 +38,7 @@ Sem tarefas pendentes ──► agente marca done e sugere /verificar
    - instruções: o conteúdo de [`instrucoes-agente.md`](instrucoes-agente.md);
    - plugin `sdd` instalado para o usuário que roda o Paperclip (o hook precisa estar ativo).
 4. No Claude Code do host, o plugin precisa estar habilitado: `claude plugin list` mostra
-   `sdd@sdd-padrao` como `enabled`.
+   `sdd@specdriven` como `enabled`.
 
 ## Riscos e cuidados
 

@@ -1,6 +1,6 @@
 # Loja (projeto de avaliação do padrão SDD)
 
-Calcula preços de uma loja. Projeto mínimo usado só pelos evals do `sdd-padrao`.
+Calcula preços de uma loja. Projeto mínimo usado só pelos evals do `SpecDriven`.
 
 ## Comandos
 | Módulo | Build | Teste | Diretório |

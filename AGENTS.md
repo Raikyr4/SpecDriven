@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Instruções para agentes de IA que trabalham neste repositório (`sdd-padrao`), que é o
+Instruções para agentes de IA que trabalham neste repositório (`SpecDriven`), que é o
 marketplace e o plugin `sdd` do Claude Code. Antes de qualquer tarefa, faça a validação inicial
 abaixo. Detalhes do padrão estão no [README.md](README.md).
 
@@ -9,7 +9,7 @@ abaixo. Detalhes do padrão estão no [README.md](README.md).
 Na primeira resposta da sessão, antes de qualquer outra tarefa, faça a checagem rápida abaixo e
 **avise o usuário** do resultado em uma ou duas linhas:
 
-1. Rode `claude plugin list`. Se `sdd@sdd-padrao` não aparecer como `enabled`, diga:
+1. Rode `claude plugin list`. Se `sdd@specdriven` não aparecer como `enabled`, diga:
    "O plugin `sdd` não está instalado. Ele é necessário para usar este projeto (comandos
    `/especificar`, `/planejar` e os demais). Posso instalar pelo CLI?" Só instale depois do
    usuário confirmar, seguindo "Instalar o plugin `sdd`".
@@ -36,7 +36,7 @@ tente contornar.
 4. **Testes do gate:** rode `python tests/preparar_ambiente.py` (com `--instalar` para instalar o
    PyYAML pelo pip; o `pdftotext` ele só aponta). Depois `python -m unittest discover -s tests` deve
    terminar em `OK`, sem testes ignorados.
-5. **Plugin instalado:** `claude plugin list` deve mostrar `sdd@sdd-padrao` com `Status: enabled`.
+5. **Plugin instalado:** `claude plugin list` deve mostrar `sdd@specdriven` com `Status: enabled`.
 
 ## Instalar o plugin `sdd`
 
@@ -45,14 +45,14 @@ desktop do Claude, `/plugin` abre uma tela de gerenciamento e descarta os argume
 
 ```bash
 claude plugin marketplace add https://github.com/Raikyr4/SpecDriven.git
-claude plugin install sdd@sdd-padrao
+claude plugin install sdd@specdriven
 claude plugin list
 ```
 
 - O repositório é público (`https://github.com/Raikyr4/SpecDriven.git`): não precisa de login.
 - Para testar o plugin a partir desta pasta local, sem baixar do GitHub, use
   `claude plugin marketplace add <caminho-desta-pasta>`.
-- Para atualizar: `claude plugin marketplace update sdd-padrao`.
+- Para atualizar: `claude plugin marketplace update specdriven`.
 - Depois de instalar, a sessão em andamento só vê os comandos após `/reload-plugins` ou uma nova
   sessão. Confirme que `/especificar` e `/situacao` aparecem ao digitar `/`.
 
@@ -86,6 +86,13 @@ claude plugin list
 
 ```text
 .claude-plugin/marketplace.json   catálogo do marketplace
-plugins/sdd/                      plugin: commands/, agents/, hooks/, scripts/, templates/
-tests/                            testes do gate
+plugins/sdd/                      plugin: commands/, agents/, hooks/, scripts/, references/,
+                                  templates/
+tests/                            testes do gate, referências, medidor e runner de evals
+evals/                            evals dos comandos (gastam tokens; exigem o CLI `claude`)
+integrations/paperclip/           execução assíncrona do /implementar (experimental)
+docs/POP.md                       procedimento de uso
 ```
+
+O `VERSAO` em `plugins/sdd/hooks/sdd_gate.py` acompanha a `version` do `plugin.json` (um teste
+garante); suba os dois juntos.

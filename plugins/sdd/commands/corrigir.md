@@ -1,5 +1,5 @@
 ---
-description: "Atalho para bug pequeno: descreva o bug e receba análise e tarefas num só arquivo para aprovar; depois use /implementar."
+description: "Atalho para bug ou ajuste pequeno: descreva o problema e receba análise e tarefas num só arquivo para aprovar; depois use /implementar."
 argument-hint: "<descrição do bug>"
 allowed-tools: Read, Glob, Grep, Write, AskUserQuestion, Bash(sh ${CLAUDE_PLUGIN_ROOT}/scripts/py.sh *), Bash(git fetch:*), Bash(git status:*), Bash(git switch -c:*), Bash(git worktree add:*), Bash(git show:*)
 ---

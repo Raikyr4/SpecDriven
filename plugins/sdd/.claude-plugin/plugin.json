@@ -1,7 +1,7 @@
 {
   "name": "sdd",
   "displayName": "Padrão SDD",
-  "version": "0.1.21",
+  "version": "0.1.22",
   "description": "Spec-Driven Development da empresa: constituição, spec, plano, tarefas e implementação por agentes, com aprovação humana obrigatória entre as fases.",
   "author": { "name": "Renner" },
   "license": "UNLICENSED",

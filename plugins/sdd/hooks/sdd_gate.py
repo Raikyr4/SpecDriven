@@ -47,6 +47,7 @@ import tempfile
 import xml.etree.ElementTree as ET
 
 CONFIG_REL = ".claude/sdd.json"
+VERSAO = "0.1.22"  # igual a plugins/sdd/.claude-plugin/plugin.json (teste garante)
 
 PADRAO = {
     "versao": 1,
@@ -266,9 +267,24 @@ def promovido(proj, rel):
     return head is not None and status_de(head) == "aprovado" and lf(proj.no_disco(rel)) == lf(head)
 
 
+RE_PLACEHOLDER = re.compile(r"<[^<>\n]+>")
+RE_CRASE = re.compile(r"`[^`\n]*`")
+
+
+def tem_placeholder(linha):
+    """<algo> fora de crase: sobra do template (genericos como `List<T>` ficam em crase)."""
+    return RE_PLACEHOLDER.search(RE_CRASE.sub("", linha)) is not None
+
+
+def tarefas_reais(texto, abertas=False):
+    """Linhas de tarefa preenchidas (sem <placeholder> do template); so as abertas, se pedido."""
+    linhas = [m.group(0) for m in RE_TAREFA.finditer(texto or "") if not tem_placeholder(m.group(0))]
+    return [l for l in linhas if RE_CAIXA_ABERTA.match(l)] if abertas else linhas
+
+
 def e_trabalho(tipo, texto):
-    """Artefato que libera codigo: tarefas, bug, ou plano compacto com as tarefas dentro."""
-    return tipo in ("tasks", "bug") or (tipo == "plan" and RE_TAREFA.search(texto or "") is not None)
+    """Artefato que libera codigo: tarefas, bug, ou plano compacto com tarefas preenchidas."""
+    return tipo in ("tasks", "bug") or (tipo == "plan" and bool(tarefas_reais(texto)))
 
 
 def trabalho_liberado(proj, rel):
@@ -289,7 +305,7 @@ def tarefas_ativas(proj):
         if feature and art and art[0] != feature:
             continue
         if art and e_trabalho(art[2], proj.no_disco(rel)) and trabalho_liberado(proj, rel):
-            if RE_CAIXA_ABERTA.search(proj.no_disco(rel) or ""):
+            if tarefas_reais(proj.no_disco(rel), abertas=True):
                 ativas.append(rel)
     return ativas
 
@@ -696,11 +712,15 @@ def modo_status(como_json):
     proximo = "{:03d}".format(maior + 1)
     andamento = features_em_andamento(proj, refs) if proj.ativo else {}
     conflitos = sobreposicoes(andamento)
+    copia = proj.no_disco(".sdd/sdd_gate.py") if proj.ativo else None
+    mv = re.search(r'^VERSAO = "([^"]+)"', copia or "", re.M)
+    versao_copia = mv.group(1) if mv else ("anterior a 0.1.22" if copia else None)
     if como_json:
         print(json.dumps({
             "sdd": proj.ativo, "proximo": proximo, "features": lista,
             "em_andamento": {k: {"refs": v["refs"], "modulos": sorted(v["modulos"])} for k, v in sorted(andamento.items())},
             "sobreposicoes": [{"modulo": m, "features": n} for m, n in conflitos],
+            "gate": {"plugin": VERSAO, "projeto": versao_copia},
         }, ensure_ascii=False, indent=2))
         return 0
     if not proj.ativo:
@@ -722,6 +742,10 @@ def modo_status(como_json):
     for mod, nums in conflitos:
         print("\nATENCAO: as features {} mexem no modulo {} ao mesmo tempo. Combine a ordem de merge "
               "ou junte as duas antes de implementar.".format(", ".join(nums), mod))
+    if versao_copia and versao_copia != VERSAO:
+        print("\nATENCAO: .sdd/sdd_gate.py do projeto e da versao {}; o plugin e {}. O check do PR roda "
+              "a copia do projeto: atualize com cp \"<plugin>/hooks/sdd_gate.py\" .sdd/ (o /prepararsdd mostra o "
+              "caminho) e commite.".format(versao_copia, VERSAO))
     print("\nProximo numero livre: {} (considerando {} branch(es))".format(proximo, len(refs)))
     return 0
 
@@ -897,7 +921,7 @@ def modo_contexto(numero, como_json):
 # --------------------------------------------------------------------------- revisao
 
 RE_SENSIVEL = re.compile(
-    r"(?i)(senha|password|passwd|secret|segredo|token|jwt|bearer|api[_-]?key|connection\s*string|"
+    r"(?i)(senha|password|passwd|secret|segredo|(?<!cancellation)token|jwt|bearer|api[_-]?key|connection\s*string|"
     r"authoriz|authenticat|autentica|autoriza|\bcpf\b|\bcnpj\b|crypt|cookie|cors)")
 
 
@@ -953,7 +977,18 @@ def modo_revisao(base, como_json):
     por_conteudo = sorted({m.group(1).lower() for l in adicionadas for m in [RE_SENSIVEL.search(l)] if m})
     limite = int(proj.config.get("limite_revisao") or 50)
     tamanho = len(adicionadas) + len(removidas)
-    fd, caminho = tempfile.mkstemp(prefix="sdd-diff-", suffix=".diff")
+    git_dir = (proj.git("rev-parse", "--absolute-git-dir") or "").strip()
+    pasta = os.path.join(git_dir, "sdd") if git_dir else None
+    if pasta:
+        os.makedirs(pasta, exist_ok=True)
+        antigos = sorted((os.path.join(pasta, n) for n in os.listdir(pasta) if n.startswith("revisao-")),
+                         key=os.path.getmtime)
+        for antigo in antigos[:-4]:  # mantem so os diffs mais recentes
+            try:
+                os.remove(antigo)
+            except OSError:
+                pass
+    fd, caminho = tempfile.mkstemp(prefix="revisao-", suffix=".diff", dir=pasta)
     with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as f:
         f.write(diff)
     motivos_codigo = []
@@ -1149,10 +1184,13 @@ def requisitos_vivos(texto):
     return [(t, normalizar_corpo(c)) for t, c in blocos(texto or "", RE_REQUISITO)]
 
 
-def montar_viva(cap, requisitos):
-    partes = ["# Capacidade: {}\n".format(cap),
-              "Comportamento vigente. Atualizado por `sdd_gate.py consolidar` ao fim de cada feature, "
-              "a partir da secao \"{}\" da spec.\n".format(SECAO_DELTAS)]
+def montar_viva(cap, requisitos, cabecalho=None):
+    if cabecalho and cabecalho.strip():
+        partes = [cabecalho.strip() + "\n"]
+    else:
+        partes = ["# Capacidade: {}\n".format(cap),
+                  "Comportamento vigente. Atualizado por `sdd_gate.py consolidar` ao fim de cada feature, "
+                  "a partir da secao \"{}\" da spec.\n".format(SECAO_DELTAS)]
     for titulo, corpo, origem in requisitos:
         partes.append("### Requisito: {}\n<!-- origem: {} -->\n{}\n".format(titulo, origem, corpo))
     return "\n".join(partes)
@@ -1197,7 +1235,9 @@ def aplicar_deltas(proj, num, deltas):
                     reqs.remove(existente); del por_titulo[titulo]; mudou = True
                     pendencias.append("{}: remover '{}'".format(cap, titulo))
         if mudou:
-            novos[rel] = montar_viva(cap, reqs)
+            primeiro = RE_REQUISITO.search(atual or "")
+            cabecalho = (atual or "")[:primeiro.start()] if primeiro else atual
+            novos[rel] = montar_viva(cap, reqs, cabecalho)
     return novos, pendencias, erros
 
 
@@ -1311,6 +1351,8 @@ def validar_tarefas(texto, problemas, cas_esperados, bug=False):
     cobertos = set()
     for t in tarefas:
         linha = t["linha"]
+        if tem_placeholder(linha):
+            problemas.append(("ERRO", "{} ainda tem <placeholder> do template; preencha ou apague a linha".format(t["id"])))
         cobertos |= set(re.findall(r"\bCA-\d+\b", linha))
         if not re.search(r"pronto\s*:", linha, re.I):
             problemas.append(("ERRO", "{} sem criterio de pronto ('pronto: ...')".format(t["id"])))

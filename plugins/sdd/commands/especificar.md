@@ -54,7 +54,7 @@ cobre; sem `F-<n>` num PRD, pergunte qual. Cite nas fontes o brief e a F-n.
    sistema se comporta hoje, leia em `specs/vivas/` (e nas pastas de `specs_vivas_externas` do
    `sdd.json`, que são de outros repositórios e só de leitura) só as capacidades que a feature toca.
 5. **Classifique a cerimônia** (o humano confirma com `AskUserQuestion`, sugestão primeiro):
-   - **trivial** — 1 módulo, sem contrato, sem dados, poucas linhas: pare e recomende `/corrigir`;
+   - **trivial** — 1 módulo, sem contrato, sem dados, poucas linhas: pare e recomende `/corrigir` (serve para bug e para ajuste pequeno);
    - **media** — 1 a 2 módulos, sem migração nem contrato entre sistemas: spec curta, e o
      `/planejar` coloca as tarefas dentro do plano (uma aprovação a menos);
    - **grande** — contrato entre módulos ou sistemas, migração de dados, segurança, muitos

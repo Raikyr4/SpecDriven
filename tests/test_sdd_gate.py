@@ -1025,6 +1025,61 @@ class Descoberta(unittest.TestCase):
         self.assertEqual(decisao, "allow")
 
 
+class RegressoesDaRevisao(unittest.TestCase):
+    """Erros achados na revisao da sessao que criou contexto, validar, revisao e consolidar."""
+
+    def setUp(self):
+        self.r = Repo()
+        self.r.escrever("specs/001-login-spec.md", artefato("001-login", "spec", "aprovado", SPEC_CONTEXTO))
+
+    def tearDown(self):
+        self.r.fechar()
+
+    def test_plano_com_linha_modelo_de_tarefa_nao_libera_codigo(self):
+        caminho = os.path.join(AQUI, "..", "plugins", "sdd", "templates", "artefatos", "plan.md")
+        with open(caminho, encoding="utf-8") as f:
+            self.r.escrever("specs/001-login-plan.md", f.read().replace("status: rascunho", "status: aprovado"))
+        self.r.commit("plano aprovado com a secao de tarefas do template")
+        self.assertEqual(self.r.hook("Write", file_path="src/api/A.cs", content="class A {}")[0], "deny")
+        p = rodar(self.r, "validar", "specs/001-login-plan.md")
+        self.assertIn("ainda tem <placeholder> do template", p.stdout)
+
+    def test_generico_em_crase_conta_como_tarefa(self):
+        plano = PLANO_CONTEXTO + "\n## Tarefas\n\n- [ ] T-1 — Criar `Repositorio<Cliente>` · módulo api · origem RF-1 · pronto: CA_1 passa\n"
+        self.r.escrever("specs/001-login-plan.md", artefato("001-login", "plan", "aprovado", plano))
+        self.r.commit("plano compacto")
+        self.assertEqual(self.r.hook("Write", file_path="src/api/A.cs", content="class A {}")[0], "allow")
+
+    def test_cancellation_token_nao_e_sensivel(self):
+        self.r.commit("base")
+        self.r.escrever("src/api/A.cs", "public Task Get(CancellationToken ct) => Task.CompletedTask;\n")
+        dados = json.loads(rodar(self.r, "revisao", "--json").stdout)
+        self.assertFalse(dados["revisor_de_seguranca"], dados["motivos_seguranca"])
+
+    def test_status_avisa_copia_do_gate_desatualizada(self):
+        self.r.escrever(".sdd/sdd_gate.py", "# gate antigo, sem VERSAO\n")
+        self.r.commit("copia antiga")
+        p = rodar(self.r, "status")
+        self.assertIn("ATENCAO: .sdd/sdd_gate.py do projeto", p.stdout)
+        dados = json.loads(rodar(self.r, "status", "--json").stdout)
+        self.assertEqual(dados["gate"]["projeto"], "anterior a 0.1.22")
+
+    def test_consolidar_preserva_o_cabecalho_da_spec_viva(self):
+        cabecalho = "# Capacidade: autenticacao\n\nPontos em aberto: ver specs/000-estado-atual-api-spec.md.\n\n"
+        self.r.escrever("specs/vivas/autenticacao.md", VIVA.replace("# Capacidade: autenticacao\n\n", cabecalho))
+        self.r.escrever("specs/002-bloqueio-spec.md", artefato("002-bloqueio", "spec", "aprovado", SPEC_CONTEXTO + DELTAS))
+        self.assertEqual(rodar(self.r, "consolidar", "002").returncode, 0)
+        viva = self.r.ler("specs/vivas/autenticacao.md")
+        self.assertIn("Pontos em aberto: ver specs/000-estado-atual-api-spec.md.", viva)
+        self.assertIn("Bloqueio por tentativas", viva)
+
+    def test_versao_do_gate_igual_a_do_plugin(self):
+        with open(os.path.join(AQUI, "..", "plugins", "sdd", ".claude-plugin", "plugin.json"), encoding="utf-8") as f:
+            versao = json.load(f)["version"]
+        with open(GATE, encoding="utf-8") as f:
+            self.assertIn('VERSAO = "{}"'.format(versao), f.read())
+
+
 class PlanoCompacto(unittest.TestCase):
     """Caminho medio: o plano aprovado traz as tarefas e libera codigo sem -tasks.md."""
 
@@ -1092,7 +1147,8 @@ class Revisao(unittest.TestCase):
         self.assertFalse(dados["revisor_de_seguranca"])
         with open(dados["diff"], encoding="utf-8") as f:
             self.assertIn("int x", f.read())
-        self.assertFalse(os.path.abspath(dados["diff"]).startswith(os.path.abspath(self.r.dir)))
+        self.assertIn("/.git/sdd/", dados["diff"].replace("\\", "/"))
+        self.assertNotIn("revisao-", self.r.git("status", "--porcelain"))
 
     def test_arquivo_novo_e_diff_grande_pedem_revisor(self):
         self.r.escrever("src/api/B.cs", "class B {}\n")

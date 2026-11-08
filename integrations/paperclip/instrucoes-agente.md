@@ -11,8 +11,9 @@ um comentário pedindo o número e passe a tarefa para `in_review` com uma inter
 
 ## 2. Contexto mínimo
 
-Rode `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" hooks/sdd_gate.py contexto <NNN>` na raiz do
-projeto (ou `python .sdd/sdd_gate.py contexto <NNN>` se o plugin não estiver no PATH do runtime).
+Rode `python .sdd/sdd_gate.py contexto <NNN>` na raiz do projeto. (A variável
+`${CLAUDE_PLUGIN_ROOT}` só existe dentro dos comandos do plugin; aqui use a cópia do projeto,
+que precisa ser da versão 0.1.22 ou mais nova: `python .sdd/sdd_gate.py status` avisa se não for.)
 
 - `Lista liberada pelo gate: NAO` → marque a tarefa `blocked` com um `unblockDescriptor` para você
   mesmo e a ação "humano aprovar e commitar as tarefas da feature <NNN>". Não escreva código.
@@ -28,9 +29,12 @@ relate no comentário e marque `blocked`.
 
 ## 4. Fechar o heartbeat
 
-1. `sh "${CLAUDE_PLUGIN_ROOT}/scripts/py.sh" scripts/medir_sessao.py --registrar specs/.metricas/<NNN>.jsonl --feature <NNN> --fase implementar`.
+1. Se o script do plugin estiver acessível (procure `plugins/sdd/scripts/medir_sessao.py` ou
+   `**/sdd/scripts/medir_sessao.py` em `~/.claude/plugins/`), registre o consumo:
+   `python <caminho>/medir_sessao.py --registrar specs/.metricas/<NNN>.jsonl --feature <NNN> --fase implementar`.
+   O Paperclip também registra tokens por run; não deixe de fechar o heartbeat por causa disso.
 2. Comentário na tarefa do Paperclip com: a tarefa SDD feita, arquivos alterados, a saída decisiva
-   dos testes, os achados dos revisores, o consumo registrado e o bloco de commit sugerido
+   dos testes, os achados dos revisores, o consumo (se registrado) e o bloco de commit sugerido
    (`git add ...` e `git commit -m "task <NNN> T-<n>: <título>"`). **Você não commita.**
 3. Work product `workspace_file` apontando para os arquivos alterados, para o humano abrir o diff.
 4. Status `in_review` (o revisor é o humano dono da feature). Não escolha a próxima tarefa: o

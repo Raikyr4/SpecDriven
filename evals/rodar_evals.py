@@ -56,7 +56,10 @@ def preparar(caso):
 
 
 def rodar_claude(projeto, prompt, extra):
-    cmd = ["claude", "-p", prompt, "--output-format", "json", "--plugin-dir", PLUGIN] + shlex.split(extra)
+    exe = shutil.which("claude")
+    if not exe:
+        return {"erro": "comando 'claude' não encontrado no PATH"}, 0.0
+    cmd = [exe, "-p", prompt, "--output-format", "json", "--plugin-dir", PLUGIN] + shlex.split(extra)
     inicio = time.time()
     try:
         p = subprocess.run(cmd, cwd=projeto, capture_output=True, text=True, encoding="utf-8",
